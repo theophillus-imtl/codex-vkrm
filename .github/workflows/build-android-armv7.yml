@@ -24,7 +24,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y perl make clang lld pkg-config
 
       - name: Install Android NDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
       - name: Install NDK package
         run: sdkmanager "ndk;27.2.12479018"
 
