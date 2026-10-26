@@ -40,6 +40,14 @@ jobs:
       - name: Build ARMv7 Android binaries
         working-directory: codex-rs
         run: |
+          # OpenSSL's configure script expects GNU-style Android-prefixed tool names.
+          # The NDK ships LLVM tools, so provide compatible aliases for its cross-build.
+          for tool in ar ranlib nm strip objcopy objdump readelf addr2line size strings; do
+            if [ -x "$NDK_BIN/llvm-$tool" ]; then
+              ln -sf "$NDK_BIN/llvm-$tool" "$NDK_BIN/arm-linux-androideabi-$tool"
+            fi
+          done
+          export PATH="$NDK_BIN:$PATH"
           export CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER="$NDK_BIN/armv7a-linux-androideabi24-clang"
           export CC_armv7_linux_androideabi="$NDK_BIN/armv7a-linux-androideabi24-clang"
           export AR_armv7_linux_androideabi="$NDK_BIN/llvm-ar"
