@@ -41,9 +41,10 @@ jobs:
         working-directory: codex-rs
         run: |
           export CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER="$NDK_BIN/armv7a-linux-androideabi24-clang"
-          echo "CC_armv7_linux_androideabi=$NDK_BIN/armv7a-linux-androideabi24-clang" >> "$GITHUB_ENV"
-          echo "AR_armv7_linux_androideabi=$NDK_BIN/llvm-ar" >> "$GITHUB_ENV"
-          echo "CXX_armv7_linux_androideabi=$NDK_BIN/armv7a-linux-androideabi24-clang++" >> "$GITHUB_ENV"
+          export CC_armv7_linux_androideabi="$NDK_BIN/armv7a-linux-androideabi24-clang"
+          export AR_armv7_linux_androideabi="$NDK_BIN/llvm-ar"
+          export CXX_armv7_linux_androideabi="$NDK_BIN/armv7a-linux-androideabi24-clang++"
+          export CFLAGS_armv7_linux_androideabi="--target=armv7a-linux-androideabi24"
           cargo build --release --target armv7-linux-androideabi -p codex-cli -p codex-exec
 
       - name: Prepare artifact
