@@ -46,6 +46,8 @@ pub enum ReasoningEffort {
     Medium,
     High,
     XHigh,
+    /// Highest reasoning effort exposed by newer model metadata.
+    Max,
 }
 
 /// Canonical user-input modality tags advertised by a model.
@@ -467,6 +469,7 @@ fn effort_rank(effort: ReasoningEffort) -> i32 {
         ReasoningEffort::Medium => 3,
         ReasoningEffort::High => 4,
         ReasoningEffort::XHigh => 5,
+        ReasoningEffort::Max => 6,
     }
 }
 
