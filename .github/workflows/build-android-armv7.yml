@@ -1,0 +1,65 @@
+name: Build patched Codex for Android ARMv7
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "codex-rs/protocol/src/openai_models.rs"
+      - ".github/workflows/build-android-armv7.yml"
+      - "codex-rs/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build-armv7:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install host dependencies
+        run: sudo apt-get update && sudo apt-get install -y perl make clang lld pkg-config
+
+      - name: Install Android NDK
+        uses: android-actions/setup-android@v3
+      - name: Install NDK package
+        run: sdkmanager "ndk;27.2.12479018"
+
+      - name: Set up Rust target
+        run: |
+          rustup target add armv7-linux-androideabi
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          echo "NDK_BIN=$ANDROID_SDK_ROOT/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_ENV"
+
+      - name: Build ARMv7 Android binaries
+        working-directory: codex-rs
+        env:
+          CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER: /usr/bin/true
+        run: |
+          echo "CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER=$NDK_BIN/armv7a-linux-androideabi24-clang" >> "$GITHUB_ENV"
+          echo "CC_armv7_linux_androideabi=$NDK_BIN/armv7a-linux-androideabi24-clang" >> "$GITHUB_ENV"
+          echo "AR_armv7_linux_androideabi=$NDK_BIN/llvm-ar" >> "$GITHUB_ENV"
+          echo "CXX_armv7_linux_androideabi=$NDK_BIN/armv7a-linux-androideabi24-clang++" >> "$GITHUB_ENV"
+          cargo build --release --target armv7-linux-androideabi -p codex-cli -p codex-exec
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p dist/codex-android-armv7
+          cp codex-rs/target/armv7-linux-androideabi/release/codex dist/codex-android-armv7/
+          cp codex-rs/target/armv7-linux-androideabi/release/codex-exec dist/codex-android-armv7/
+          cp "$NDK_BIN/../sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so" dist/codex-android-armv7/
+          chmod +x dist/codex-android-armv7/codex dist/codex-android-armv7/codex-exec
+          tar -czf codex-android-armv7.tar.gz -C dist codex-android-armv7
+          sha256sum codex-android-armv7.tar.gz > codex-android-armv7.tar.gz.sha256
+
+      - name: Upload ARMv7 binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-android-armv7
+          path: |
+            codex-android-armv7.tar.gz
+            codex-android-armv7.tar.gz.sha256
+          retention-days: 14
