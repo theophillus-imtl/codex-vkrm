@@ -53,6 +53,9 @@ jobs:
           export AR_armv7_linux_androideabi="$NDK_BIN/llvm-ar"
           export CXX_armv7_linux_androideabi="$NDK_BIN/armv7a-linux-androideabi24-clang++"
           export CFLAGS_armv7_linux_androideabi="--target=armv7a-linux-androideabi24"
+          # Some native dependencies pull in libc++_static.a; explicitly link the
+          # NDK shared C++ runtime to satisfy its ABI/exception symbols at final link.
+          export RUSTFLAGS="-C link-arg=-lc++_shared"
           cargo build --release --target armv7-linux-androideabi -p codex-cli -p codex-exec
 
       - name: Prepare artifact
